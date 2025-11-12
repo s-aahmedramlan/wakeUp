@@ -11,6 +11,7 @@ import { processFrameWithMediaPipe } from './mediapipeNative';
  * This processes each frame with MediaPipe pose detection
  */
 export const createMediaPipeFrameProcessor = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void
 ) => {
   return async (frame: Frame) => {
@@ -25,6 +26,7 @@ export const createMediaPipeFrameProcessor = (
  * Initialize MediaPipe for vision-camera
  */
 export const initializeMediaPipeForVisionCamera = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void
 ): Promise<boolean> => {
   const { initializeMediaPipe, startMediaPipeDetection } = await import('./mediapipeNative');

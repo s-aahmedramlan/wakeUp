@@ -25,8 +25,9 @@ import { Frame } from 'react-native-vision-camera';
  * This is a placeholder that will be implemented based on chosen approach
  */
 export const processFrameWithMediaPipe = async (
-  frame: Frame,
-  onResults: (results: any) => void
+  _frame: Frame,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _onResults: (results: any) => void
 ): Promise<void> => {
   // TODO: Implement based on chosen MediaPipe integration approach
   

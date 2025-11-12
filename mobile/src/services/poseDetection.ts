@@ -31,6 +31,7 @@ export interface PoseLandmarks {
 /**
  * Extract pose landmarks from MediaPipe results
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const extractLandmarks = (results: any): PoseLandmarks | null => {
   if (!results || !results.poseLandmarks || results.poseLandmarks.length === 0) {
     return null;

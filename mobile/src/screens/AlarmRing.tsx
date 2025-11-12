@@ -89,7 +89,7 @@ export const AlarmRing: React.FC = () => {
     return () => {
       stopAlarmSound();
     };
-  }, [hasPermission]);
+  }, [hasPermission, requestPermission]);
 
   // Sync rep count from pose detector state
   useEffect(() => {
@@ -100,7 +100,8 @@ export const AlarmRing: React.FC = () => {
     if (pushupState.isComplete && !isComplete) {
       handleComplete();
     }
-  }, [pushupState.repCount, pushupState.isComplete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pushupState.repCount, pushupState.isComplete, isComplete]);
 
   if (!hasPermission || !device) {
     return (

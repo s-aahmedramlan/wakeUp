@@ -11,6 +11,7 @@ import { initializeTensorFlowPose, processFrameWithTensorFlow, cleanupTensorFlow
 export class PoseDetectionManager {
   private config: PoseDetectionConfig;
   private activeBackend: 'mediapipe' | 'tensorflow' | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private onResultsCallback: ((results: any) => void) | null = null;
 
   constructor(config: PoseDetectionConfig = DEFAULT_CONFIG) {
@@ -20,6 +21,7 @@ export class PoseDetectionManager {
   /**
    * Initialize pose detection with chosen backend
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async initialize(onResults: (results: any) => void): Promise<boolean> {
     this.onResultsCallback = onResults;
 
@@ -53,6 +55,7 @@ export class PoseDetectionManager {
   /**
    * Process a frame (both backends need explicit frame processing with vision-camera)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async processFrame(frame: any): Promise<void> {
     if (!this.onResultsCallback) {
       console.warn('Pose detection not initialized');

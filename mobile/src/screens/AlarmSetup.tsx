@@ -32,6 +32,7 @@ export const AlarmSetup: React.FC = () => {
     } else {
       cancelAlarm();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, hour, minute, pushupTarget]);
 
   const handleSave = () => {

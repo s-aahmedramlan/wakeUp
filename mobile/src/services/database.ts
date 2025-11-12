@@ -55,7 +55,7 @@ export const saveWakeSession = async (session: WakeSession): Promise<void> => {
             session.motivationTrack || null,
             session.timestamp,
           ],
-          (_, result) => {
+          () => {
             console.log('Session saved locally');
             resolve();
           },

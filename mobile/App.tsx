@@ -6,13 +6,16 @@ import { AlarmSetup } from './src/screens/AlarmSetup';
 import { AlarmRing } from './src/screens/AlarmRing';
 import { initializeDatabase } from './src/services/database';
 import { setupNotificationListener } from './src/services/notifications';
-import { useAlarmStore } from './src/store/useAlarmStore';
+
+type RootStackParamList = {
+  AlarmSetup: undefined;
+  AlarmRing: undefined;
+};
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const { setCurrentSession } = useAlarmStore();
-  const navigationRef = useRef<NavigationContainerRef<any>>(null);
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
 
   useEffect(() => {
     // Initialize database

@@ -71,8 +71,11 @@ export const initializeTensorFlowPose = async (): Promise<boolean> => {
  * Process a vision-camera frame and extract pose landmarks
  * Returns landmarks in MediaPipe-compatible format
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const processFrameWithTensorFlow = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   frame: any, // vision-camera Frame
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void
 ): Promise<void> => {
   if (!model || !isInitialized) {
@@ -107,10 +110,12 @@ export const processFrameWithTensorFlow = async (
 /**
  * Convert MoveNet keypoints to MediaPipe format
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertToMediaPipeFormat = (
   keypoints: Float32Array | Int32Array | Uint8Array,
-  width: number,
-  height: number
+  _width: number,
+  _height: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any[] => {
   // MoveNet keypoint order:
   // 0: nose, 1: left_eye, 2: right_eye, 3: left_ear, 4: right_ear,
@@ -118,6 +123,7 @@ const convertToMediaPipeFormat = (
   // 9: left_wrist, 10: right_wrist, 11: left_hip, 12: right_hip,
   // 13: left_knee, 14: right_knee, 15: left_ankle, 16: right_ankle
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const landmarks: any[] = [];
   const numKeypoints = 17;
 

@@ -50,6 +50,7 @@ export const usePoseDetector = (options: UsePoseDetectorOptions = {}) => {
   }, [pushupState]);
 
   // Process pose detection results from MediaPipe
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processPoseResults = useCallback((results: any) => {
     // Extract landmarks from MediaPipe results
     const landmarks = extractLandmarks(results);
@@ -121,6 +122,7 @@ export const usePoseDetector = (options: UsePoseDetectorOptions = {}) => {
 
   // MediaPipe pose results processor
   // This will be called when MediaPipe detects a pose
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const poseResultsRef = useRef<(results: any) => void>(processPoseResults);
 
   useEffect(() => {
@@ -128,6 +130,7 @@ export const usePoseDetector = (options: UsePoseDetectorOptions = {}) => {
   }, [processPoseResults]);
 
   // Expose processPoseResults so pose detection can call it
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlePoseResults = useCallback((results: any) => {
     processPoseResults(results);
   }, [processPoseResults]);
@@ -149,6 +152,7 @@ export const usePoseDetector = (options: UsePoseDetectorOptions = {}) => {
         
         // If MediaPipe, start detection
         if (backend === 'mediapipe') {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { startMediaPipeDetection } = require('../services/mediapipeNative');
           startMediaPipeDetection(handlePoseResults, {
             modelComplexity: 1,
@@ -169,6 +173,7 @@ export const usePoseDetector = (options: UsePoseDetectorOptions = {}) => {
   }, [handlePoseResults]);
 
   // Process frame for TensorFlow (MediaPipe handles automatically)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processFrame = useCallback((frame: any) => {
     if (poseManagerRef.current && backendRef.current === 'tensorflow') {
       poseManagerRef.current.processFrame(frame);
@@ -176,6 +181,7 @@ export const usePoseDetector = (options: UsePoseDetectorOptions = {}) => {
   }, []);
 
   // Process frame for MediaPipe (needs explicit processing in frame processor)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processMediaPipeFrame = useCallback((frame: any) => {
     if (poseManagerRef.current && backendRef.current === 'mediapipe') {
       poseManagerRef.current.processFrame(frame);

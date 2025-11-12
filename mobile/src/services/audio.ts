@@ -26,8 +26,10 @@ export const playAlarmSound = async () => {
     // In production, this would load from S3
     // Note: For MVP, if audio file doesn't exist, we'll use system sound
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const alarmAsset = require('../../assets/sounds/alarm.mp3');
       const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/alarm.mp3'),
+        alarmAsset,
         { shouldPlay: true, isLooping: true, volume: 1.0 }
       );
       alarmSound = sound;
@@ -62,8 +64,10 @@ export const playMotivationSound = async () => {
     // For MVP, use a local asset
     // In production, this would load from S3
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const motivationAsset = require('../../assets/sounds/motivation.mp3');
       const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/motivation.mp3'),
+        motivationAsset,
         { shouldPlay: true, isLooping: false, volume: 0.8 }
       );
       motivationSound = sound;

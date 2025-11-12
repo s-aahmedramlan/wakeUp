@@ -23,11 +23,13 @@ export const frameToTensor = async (frame: Frame, targetSize: number = 256): Pro
     
     // Create tensor from pixel data
     // Note: This is a simplified version - actual implementation depends on frame format
-    const imageTensor = tf.browser.fromPixels({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pixelObject: any = {
       data: new Uint8Array(pixelData),
       width,
       height,
-    } as any);
+    };
+    const imageTensor = tf.browser.fromPixels(pixelObject);
     
     // Resize to target size (MoveNet expects 256x256)
     const resized = tf.image.resizeBilinear(imageTensor, [targetSize, targetSize]);

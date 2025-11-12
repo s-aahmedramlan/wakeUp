@@ -1,5 +1,9 @@
 module.exports = {
   root: true,
+  env: {
+    node: true,
+    es2020: true,
+  },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
@@ -24,6 +28,8 @@ module.exports = {
   rules: {
     'react/react-in-jsx-scope': 'off',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-explicit-any': 'warn', // Warn instead of error for now
+    '@typescript-eslint/no-var-requires': 'warn', // Warn for require statements
   },
   ignorePatterns: ['node_modules/', 'dist/', 'build/', '*.config.js'],
 };

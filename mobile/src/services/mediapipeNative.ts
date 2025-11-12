@@ -5,15 +5,18 @@
  * This requires a development build (EAS Build) - MediaPipe doesn't work in Expo Go
  */
 
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules } from 'react-native';
 
 // Try to import native MediaPipe module
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let RNMediapipe: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let MediaPipePose: any = null;
 let isNativeModuleAvailable = false;
 
 try {
   // Try react-native-mediapipe (cdiddy77's package - better vision-camera support)
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const mediapipeModule = require('react-native-mediapipe');
   RNMediapipe = mediapipeModule;
   MediaPipePose = mediapipeModule.PoseLandmarker;
@@ -32,8 +35,7 @@ try {
 }
 
 let isInitialized = false;
-let onResultsCallback: ((results: any) => void) | null = null;
-let poseDetector: any = null;
+let poseDetector: unknown = null;
 
 /**
  * Initialize native MediaPipe pose detection
@@ -124,8 +126,9 @@ export const initializeMediaPipe = async (): Promise<boolean> => {
  * Start pose detection with MediaPipe
  */
 export const startMediaPipeDetection = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void,
-  config?: {
+  _config?: {
     modelComplexity?: 0 | 1 | 2;
     minDetectionConfidence?: number;
     minTrackingConfidence?: number;
@@ -173,6 +176,7 @@ export const stopMediaPipeDetection = (): void => {
 /**
  * Generate mock pose landmarks for Expo Go testing
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const generateMockLandmarks = (): any[] => {
   // Generate realistic mock landmarks for push-up position
   // These simulate a person in push-up position
@@ -215,7 +219,9 @@ const generateMockLandmarks = (): any[] => {
  * In Expo Go, uses mock detection
  */
 export const processFrameWithMediaPipe = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   frame: any, // vision-camera Frame
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void
 ): Promise<void> => {
   if (!isInitialized) {
@@ -286,6 +292,7 @@ export const processFrameWithMediaPipe = async (
 /**
  * Convert package-specific landmarks to MediaPipe format
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertLandmarksToMediaPipeFormat = (landmarks: any[]): any[] => {
   // Convert landmarks from package format to MediaPipe format
   // MediaPipe format: [{x, y, z, visibility}, ...]
