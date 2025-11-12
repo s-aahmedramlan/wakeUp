@@ -1,6 +1,8 @@
 /**
  * Native MediaPipe Integration
  * Uses react-native-mediapipe for pose detection with vision-camera
+ * 
+ * This requires a development build (EAS Build) - MediaPipe doesn't work in Expo Go
  */
 
 import { NativeModules, Platform } from 'react-native';
@@ -8,18 +10,24 @@ import { NativeModules, Platform } from 'react-native';
 // Try to import native MediaPipe module
 let RNMediapipe: any = null;
 let MediaPipePose: any = null;
+let isNativeModuleAvailable = false;
 
 try {
   // Try react-native-mediapipe (cdiddy77's package - better vision-camera support)
   const mediapipeModule = require('react-native-mediapipe');
   RNMediapipe = mediapipeModule;
   MediaPipePose = mediapipeModule.PoseLandmarker;
+  isNativeModuleAvailable = true;
+  console.log('✅ react-native-mediapipe native module loaded');
 } catch (error) {
-  // Fallback to @thinksys/react-native-mediapipe
-  try {
-    RNMediapipe = require('@thinksys/react-native-mediapipe').default;
-  } catch (e) {
-    console.warn('MediaPipe native module not installed. Install: npm install react-native-mediapipe');
+  // Check if we're in Expo Go (no native modules)
+  const isExpoGo = !NativeModules.ReactNativeMediapipe && !NativeModules.PoseLandmarker;
+  
+  if (isExpoGo) {
+    console.log('📱 Running in Expo Go - MediaPipe requires development build');
+  } else {
+    console.warn('⚠️ MediaPipe native module not found. Install: npm install react-native-mediapipe');
+    console.warn('   Then build with: eas build --platform ios --profile development');
   }
 }
 
@@ -50,25 +58,58 @@ export const initializeMediaPipe = async (): Promise<boolean> => {
 
   try {
     // Initialize MediaPipe Pose Landmarker
-    if (MediaPipePose) {
+    if (MediaPipePose && typeof MediaPipePose === 'function') {
       // Using react-native-mediapipe (cdiddy77's package)
-      poseDetector = new MediaPipePose({
-        modelAssetPath: 'pose_landmarker.task', // Will be bundled with app
-        numPoses: 1,
-        minPoseDetectionConfidence: 0.5,
-        minPosePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
-      
-      console.log('MediaPipe Pose initialized successfully');
-      isInitialized = true;
-      return true;
+      // Model path: The model should be bundled with the app
+      // For now, we'll try to initialize without explicit model path
+      // The package should handle model loading internally
+      try {
+        poseDetector = new MediaPipePose({
+          // Model will be loaded from package assets
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.5,
+          minPosePresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+        
+        console.log('✅ MediaPipe Pose initialized successfully');
+        isInitialized = true;
+        return true;
+      } catch (initError) {
+        console.warn('MediaPipe Pose constructor failed, trying alternative initialization:', initError);
+        // Try alternative initialization
+        if (RNMediapipe && typeof RNMediapipe.initialize === 'function') {
+          await RNMediapipe.initialize({
+            modelPath: 'pose_landmarker.task',
+            numPoses: 1,
+          });
+          console.log('✅ MediaPipe initialized (alternative method)');
+          isInitialized = true;
+          return true;
+        }
+      }
     } else if (RNMediapipe) {
-      // Using @thinksys/react-native-mediapipe
-      // Initialize based on their API
-      console.log('MediaPipe initialized (ThinkSys package)');
-      isInitialized = true;
-      return true;
+      // Try to initialize with available API
+      if (typeof RNMediapipe.initialize === 'function') {
+        await RNMediapipe.initialize({
+          modelPath: 'pose_landmarker.task',
+          numPoses: 1,
+        });
+        console.log('✅ MediaPipe initialized');
+        isInitialized = true;
+        return true;
+      } else if (NativeModules.ReactNativeMediapipe) {
+        // Direct native module initialization
+        const { ReactNativeMediapipe } = NativeModules;
+        if (ReactNativeMediapipe && ReactNativeMediapipe.initialize) {
+          await ReactNativeMediapipe.initialize({
+            modelPath: 'pose_landmarker.task',
+          });
+          console.log('✅ MediaPipe initialized (native module)');
+          isInitialized = true;
+          return true;
+        }
+      }
     }
     
     return false;
@@ -178,24 +219,23 @@ export const processFrameWithMediaPipe = async (
   onResults: (results: any) => void
 ): Promise<void> => {
   if (!isInitialized) {
-    console.warn('MediaPipe not initialized');
     return;
   }
 
-  // Check if we're in Expo Go (mock mode)
-  const isExpoGo = !RNMediapipe && !poseDetector;
+  // Check if we're in Expo Go or native module unavailable (mock mode)
+  const isExpoGo = !isNativeModuleAvailable || (!RNMediapipe && !poseDetector);
   
   if (isExpoGo) {
-    // Use mock landmarks for Expo Go
+    // Use mock landmarks for Expo Go or when native module unavailable
     const mockLandmarks = generateMockLandmarks();
     onResults({ poseLandmarks: mockLandmarks });
     return;
   }
 
   try {
-    if (poseDetector) {
+    if (poseDetector && typeof poseDetector.detect === 'function') {
       // react-native-mediapipe (cdiddy77's package)
-      // Process frame directly
+      // Convert frame to format MediaPipe expects
       const pixelData = frame.toArrayBuffer();
       const width = frame.width;
       const height = frame.height;
@@ -204,24 +244,42 @@ export const processFrameWithMediaPipe = async (
       const results = await poseDetector.detect(pixelData, width, height);
       
       // Convert to MediaPipe format
-      if (results && results.landmarks) {
+      if (results && results.landmarks && results.landmarks.length > 0) {
         const poseLandmarks = convertLandmarksToMediaPipeFormat(results.landmarks);
         onResults({ poseLandmarks });
       }
-    } else if (RNMediapipe) {
-      // @thinksys/react-native-mediapipe
-      // Process frame
+    } else if (RNMediapipe && typeof RNMediapipe.processFrame === 'function') {
+      // Alternative MediaPipe package API
+      // Convert frame to image data
       const imageData = await frame.toArrayBuffer();
-      const results = await RNMediapipe.processFrame(imageData);
+      const results = await RNMediapipe.processFrame(imageData, {
+        width: frame.width,
+        height: frame.height,
+      });
       
-      if (results && results.landmarks) {
+      if (results && results.landmarks && results.landmarks.length > 0) {
         const poseLandmarks = convertLandmarksToMediaPipeFormat(results.landmarks);
         onResults({ poseLandmarks });
+      }
+    } else if (RNMediapipe && NativeModules.ReactNativeMediapipe) {
+      // Direct native module call (if available)
+      const { ReactNativeMediapipe } = NativeModules;
+      if (ReactNativeMediapipe && ReactNativeMediapipe.processFrame) {
+        const imageData = await frame.toArrayBuffer();
+        const results = await ReactNativeMediapipe.processFrame(imageData, frame.width, frame.height);
+        
+        if (results && results.landmarks) {
+          const poseLandmarks = convertLandmarksToMediaPipeFormat(results.landmarks);
+          onResults({ poseLandmarks });
+        }
       }
     }
   } catch (error) {
-    console.error('Error processing frame with MediaPipe:', error);
     // Silently fail - don't crash the app
+    // Log error in development
+    if (__DEV__) {
+      console.error('Error processing frame with MediaPipe:', error);
+    }
   }
 };
 
