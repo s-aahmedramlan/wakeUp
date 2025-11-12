@@ -1,0 +1,28 @@
+{
+  "name": "riserite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RiseRite - Make discipline unavoidable with CV-verified morning habits",
+  "workspaces": [
+    "mobile"
+  ],
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "prepare": "node -e \"try { require('husky') } catch(e) {}\""
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^8.0.3",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

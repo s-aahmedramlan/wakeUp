@@ -1,0 +1,148 @@
+RiseRite — Project Plan (Dev-oriented)
+Project mission
+Make discipline unavoidable. RiseRite enforces healthy morning and productivity habits by verifying real-world actions using on-device computer vision and rewarding users with motivational audio, progress tracking, and gamified incentives.
+Three product pillars (modules):
+Wake — CV-verified alarm enforcing push-ups + brushing before silencing.
+Move — Guided, CV-tracked mini-workouts (reps, form checks, quick HIIT sessions).
+Focus — Phone-on-desk deep-work mode that verifies attention and logs focus minutes.
+This document is a developer roadmap for building the product iteratively. It is written for a small dev team working in Cursor + GitHub.
+
+High-level goals (MVP → Product)
+MVP: Mobile-first Wake module that reliably enforces push-ups and brushing, plays motivational audio, logs sessions to AWS (Cognito, DynamoDB, S3).
+Phase expansion: Add Move and Focus modules, web dashboard for analytics, gamification and social features.
+Non-functional goals: On-device CV (privacy + latency), robust UX (low false negatives), production-ready infra on AWS.
+
+Modules, features, and acceptance criteria
+1. Wake (priority: MVP)
+Features
+Alarm scheduling and full-screen alarm ring. (expo-notifications)
+CV push-up verification: pose estimation, rep counting, form validation.
+CV brushing verification: hand/toothbrush detection + continuous 15s timer.
+Motivational audio engine: alarm → motivational playlist transition (expo-av + S3-hosted audio).
+Config: push-up target (default 25), brushing target (default 15s), audio selection.
+Acceptance criteria (MVP)
+Alarm triggers at scheduled time and opens full-screen alarm screen.
+Camera activates and models begin inference without noticeable lag.
+Alarm continues until the app verifies the configured push-up count (counts true positives at ≥90% accuracy in normal lighting).
+After push-ups begin, alarm fades and motivational audio starts after first rep.
+Brushing verification requires continuous brushing motion near mouth for configured seconds before the routine is considered complete.
+Session metadata (timestamp, pushups, brushingSeconds, wakeCompleted) is persisted to DynamoDB and visible in local logs.
+2. Move (phase)
+Features
+Workout selection (quick sets, bodyweight circuits).
+CV form checks for squats, push-ups, jumping jacks (re-use pose model logic).
+Reps, sets, rest timers, and completion rewards.
+Acceptance criteria
+Basic workout session runs with rep counting and post-session summary.
+Form checks flag poor form and provide in-app coaching tips.
+3. Focus (phase)
+Features
+Desk camera focus mode: start a deep-work timer with phone propped on desk.
+Face + head-pose tracking: timer only advances when user is present and eyes oriented toward the work area.
+Phone-usage detection: auto-pause if the user picks up phone (optional heuristics) or if face leaves frame.
+Session analytics: focusMinutes, number of interruptions, longest uninterrupted stretch.
+Acceptance criteria
+Focus timer increments only when presence + attention heuristics pass.
+Interruptions are detected and logged; user can export focus session data.
+
+Phase roadmap (ordered, incremental)
+Phase 0 — Repo + infra scaffolding (pre-dev)
+Create monorepo structure: mobile/, web/, api/, infra/, ml/, docs/.
+Setup TypeScript, ESLint, Prettier, and Husky pre-commit hooks.
+Initialize GitHub repo and a basic GitHub Actions pipeline for linting.
+Configure AWS Amplify/CLI or CDK skeleton for Cognito + S3 + DynamoDB + Lambda stubs.
+Phase 1 — MVP: Wake (mobile-only)
+Implement alarm scheduling UI + full-screen alarm screen.
+Integrate react-native-vision-camera and hook up MediaPipe pose inference (on-device).
+Implement push-up rep counter + simple elbow-angle heuristic for form.
+Hook alarm → push-ups → motivational-audio transition.
+Persist minimal wake session record to DynamoDB via Lambda + API Gateway.
+Basic local acceptance tests (manual QA on a device in different lighting).
+Phase 2 — Brushing verification + robustness
+Add hand/brush detection and continuous brushing timer.
+Improve CV heuristics to reduce false positives (debounce, minimum motion energy threshold).
+Add in-app settings for push-up count and brushing duration.
+Add server-side endpoint to log session details and update streak computation.
+Phase 3 — Core infra hardening + analytics
+Implement DynamoDB tables, S3 buckets (audio assets), and Cognito flows.
+Add CloudWatch metrics and simple analytics Lambda (streak calc, retention events).
+Add automated unit + integration tests for API endpoints.
+Phase 4 — Move module (workouts)
+Reuse pose detection for multiple exercises; design workout session UX.
+Add post-workout summaries and rewards.
+Add local caching (SQLite) for offline mode and sync to DynamoDB when online.
+Phase 5 — Focus module + Web dashboard
+Implement desk camera heuristics for attention tracking.
+Web dashboard (React + Apollo + GraphQL): session history, graphs, export CSV.
+Add gamification and rewards, configurable by server.
+Phase 6 — Polishing, performance, and optional ML
+Train custom TF Lite brushing model if heuristics insufficient.
+Add Sentry and CloudWatch dashboards.
+Polish UX, onboarding, and accessibility.
+
+Technical breakdown by layer
+Mobile (React Native / Expo)
+Files to create (starter):
+mobile/App.tsx
+mobile/src/screens/AlarmSetup.tsx
+mobile/src/screens/AlarmRing.tsx (camera + CV hooks)
+mobile/src/hooks/usePoseDetector.ts (wraps MediaPipe/TFLite inference)
+mobile/src/services/audio.ts (expo-av player)
+Key packages:
+expo, react-native-vision-camera, @mediapipe/pose (or mediapipe via WASM wrapper), react-native-reanimated, nativewind, zustand, expo-notifications, expo-av
+Backend (FastAPI + Node support)
+api/fastapi/ — primary REST/GraphQL endpoints (user sessions, streaks)
+api/node/ — WebSocket + real-time events (optional)
+Suggested endpoints (REST):
+POST /session/wake -> logs wake session
+GET /user/{id}/streak -> returns streak data
+POST /audio/upload -> signed S3 URL for uploads
+Data flow: mobile -> API Gateway -> Lambda (FastAPI) -> DynamoDB; media -> S3 (signed URLs)
+ML / CV
+ml/ contains experiments and TF Lite export scripts
+Start with MediaPipe pre-trained models for Pose/Hands/Face
+If needed, iterate with custom TF models trained on small labeled datasets for toothbrush detection or edge cases
+
+Data model (schema samples)
+DynamoDB table WakeSessions (partition: userId, sort: date)
+{
+"userId": "user|123",
+"date": "2025-10-25",
+"pushupCount": 25,
+"brushingSeconds": 17,
+"wakeCompleted": true,
+"motivationTrack": "s3://rise-rite/audio/morning_1.mp3"
+}
+DynamoDB table FocusSessions:
+{
+"userId": "user|123",
+"sessionId": "uuid",
+"startTs": 1698210000,
+"endTs": 1698213600,
+"focusMinutes": 40,
+"interruptions": 3
+}
+
+Testing & QA strategy
+Unit tests for core logic (rep counting, timer logic).
+Device integration tests for CV flows (manual testing checklist: low light, bright backlight, mirror cases).
+CI runs lint + unit tests; deploy to a staging AWS environment for integration tests.
+Acceptance testing: 10-person internal beta to validate detection accuracy and UX friction.
+
+Security & Privacy
+CV inference runs on-device; no continuous video upload by default.
+If any media is uploaded (for debugging or features), require explicit opt-in and store in S3 with encryption.
+Cognito for auth, IAM least-privilege for Lambdas.
+
+Cursor-specific notes (how to work in Cursor)
+Keep small commits and use Cursor’s inline AI to iterate on usePoseDetector logic.
+Paste device logs into Cursor to quickly generate fixes for edge cases.
+Use the Canvas to store these docs and create PR templates for each phase.
+
+Deliverables (per phase)
+Phase 1: mobile app with alarm + push-up CV + motivational audio; basic API to log sessions
+Phase 2: brushing verification + settings UI
+Phase 3: infra (DynamoDB + S3) + automated logging and simple analytics
+Phase 4: Move module
+Phase 5: Focus mode + Web dashboard
+
