@@ -48,10 +48,27 @@ riserite/
    npm start
    ```
 
-4. Build development client (required for native modules):
+4. Build development client (required for native modules like MediaPipe):
+   
+   **Option A: EAS Build (Recommended - Works on Windows for iOS)**
+   ```bash
+   # Install EAS CLI globally
+   npm install -g eas-cli
+   
+   # Login to Expo
+   eas login
+   
+   # Build iOS development client
+   eas build --platform ios --profile development
+   
+   # Or build Android
+   eas build --platform android --profile development
+   ```
+   
+   **Option B: Local Build (Requires macOS for iOS)**
    ```bash
    npx expo prebuild
-   npx expo run:android  # or run:ios
+   npx expo run:android  # or run:ios (macOS only)
    ```
 
 ### Backend Setup
@@ -97,9 +114,38 @@ riserite/
 ## Architecture
 
 - **Mobile**: Expo with React Native, TypeScript, Zustand for state
-- **CV**: TensorFlow Lite (via react-native-vision-camera frame processors)
+- **CV**: MediaPipe Pose Detection (primary) + TensorFlow Lite (fallback)
 - **Backend**: FastAPI with AWS DynamoDB
 - **Storage**: Local SQLite + DynamoDB sync
+- **Build**: EAS Build for cloud-based iOS/Android builds
+
+## Deployment
+
+### EAS Build Setup
+
+1. **Install EAS CLI**:
+   ```bash
+   npm install -g eas-cli
+   ```
+
+2. **Login to Expo**:
+   ```bash
+   cd mobile
+   eas login
+   ```
+   (Create account at https://expo.dev if needed)
+
+3. **Build for iOS**:
+   ```bash
+   eas build --platform ios --profile development
+   ```
+
+4. **Install on Device**:
+   - EAS provides a download link after build completes
+   - Install via TestFlight or direct download
+   - Or use `eas build:run --platform ios` to install directly
+
+See `docs/EAS_BUILD_QUICKSTART.md` for detailed instructions.
 
 ## Next Steps (Phase 2+)
 
