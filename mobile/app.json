@@ -51,12 +51,6 @@
           "icon": "./assets/icon.png",
           "color": "#ffffff"
         }
-      ],
-      [
-        "react-native-mediapipe",
-        {
-          "cameraPermissionText": "RiseRite needs camera access for pose detection."
-        }
       ]
     ]
   }
